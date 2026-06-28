@@ -208,10 +208,24 @@ function IosFrame({ children, width=393, height=852, time='9:41', battery=82, bg
 }
 
 /* ============================ Data ============================ */
-/* QUESTIONS[0] = câu hôm nay (bánh mì). [1..4] = 4 câu mới, chơi được qua mục "Chơi thêm". */
+/* QUESTIONS[0] = câu hôm nay (hero). [1..] = các câu chơi thêm. */
 const QUESTIONS = [
   {
-    topic: 'Bánh mì', date: '28/06', emoji: '🥖',
+    topic: 'Tình yêu', date: '28/06', emoji: '💕',
+    q: 'Người yêu nhắn tin lúc mấy giờ là yêu thật lòng?',
+    options: [
+      { id:'A', label:'6h sáng: dậy chưa em?', sub:'báo thức sống', emoji:'🌅', color:'var(--pink)', pct:24 },
+      { id:'B', label:'Giờ nào cũng nhắn', sub:'làm cũng lén nhắn', emoji:'📱', color:'var(--coral)', pct:45 },
+      { id:'C', label:'12h đêm: anh nhớ em', sub:'cú đêm tình cảm', emoji:'🌙', color:'var(--sky)', pct:31 },
+    ],
+    verdicts: {
+      A: { line:'Team báo thức biết yêu 🌅', sub:'Quan tâm bạn từ lúc còn chưa mở mắt. Healthy phết!' },
+      B: { line:'Team nghiện nhắn tin 📱', sub:'Yêu là online 24/7, không rời mắt khỏi bạn một giây.' },
+      C: { line:'Team thính đêm khuya 🌙', sub:'12h đêm còn nhớ bạn — lãng mạn hay mất ngủ thì chưa rõ.' },
+    },
+  },
+  {
+    topic: 'Bánh mì', date: 'Mới', emoji: '🥖',
     q: 'Phần nào của ổ bánh mì ngon nhất?',
     options: [
       { id:'A', label:'Miếng đầu tiên', sub:'còn nóng giòn rụm', emoji:'🥖', color:'var(--sun)', pct:33 },
@@ -250,20 +264,6 @@ const QUESTIONS = [
       A: { line:'Team an cư lạc nghiệp ✅', sub:'Xong sớm ngủ ngon — đẳng cấp khó ai bì kịp.' },
       B: { line:'Team last-minute chiến thần 🔥', sub:'Chỉ bung sức khi hết đường lùi, mà lần nào cũng kịp thần kỳ.' },
       C: { line:'Team thiền định 😌', sub:'Bình tĩnh tới mức đáng báo động. An nhiên là sức mạnh.' },
-    },
-  },
-  {
-    topic: 'Tình yêu', date: 'Mới', emoji: '💕',
-    q: 'Người yêu nhắn tin lúc mấy giờ là yêu thật lòng?',
-    options: [
-      { id:'A', label:'6h sáng: dậy chưa em?', sub:'báo thức sống', emoji:'🌅', color:'var(--pink)', pct:24 },
-      { id:'B', label:'Giờ nào cũng nhắn', sub:'làm cũng lén nhắn', emoji:'📱', color:'var(--coral)', pct:45 },
-      { id:'C', label:'12h đêm: anh nhớ em', sub:'cú đêm tình cảm', emoji:'🌙', color:'var(--sky)', pct:31 },
-    ],
-    verdicts: {
-      A: { line:'Team báo thức biết yêu 🌅', sub:'Quan tâm bạn từ lúc còn chưa mở mắt. Healthy phết!' },
-      B: { line:'Team nghiện nhắn tin 📱', sub:'Yêu là online 24/7, không rời mắt khỏi bạn một giây.' },
-      C: { line:'Team thính đêm khuya 🌙', sub:'12h đêm còn nhớ bạn — lãng mạn hay mất ngủ thì chưa rõ.' },
     },
   },
   {
@@ -589,8 +589,8 @@ function ShareScreen({ go, toast }) {
           <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:18 }}>Fan Gu<span style={{ color:'var(--ink)' }}>.</span></div>
           <span className="tag" style={{ background:'rgba(0,0,0,0.25)', color:'#fff' }}>#fangu</span>
         </div>
-        <div style={{ fontSize:13, fontWeight:600, opacity:.92, marginTop:14 }}>Tri chọn phần ngon nhất của ổ bánh mì là...</div>
-        <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:28, marginTop:2 }}>👀 Miếng của đứa khác</div>
+        <div style={{ fontSize:13, fontWeight:600, opacity:.92, marginTop:14 }}>Với Tri, người yêu nhắn lúc này là thật lòng nhất...</div>
+        <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:28, marginTop:2 }}>📱 Giờ nào cũng nhắn</div>
         <div style={{ background:'rgba(255,255,255,0.22)', borderRadius:12, padding:'9px 12px', marginTop:14, fontSize:13, fontWeight:600 }}>
           Còn bạn? Vào Fan Gu trả lời thử xem mình cùng gu với ai 👀
         </div>
