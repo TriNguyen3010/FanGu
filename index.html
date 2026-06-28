@@ -153,8 +153,17 @@
   .heartburst { position:absolute; font-size:34px; animation: floatUp 1s ease-out forwards; pointer-events:none; z-index:70; }
   @keyframes floatUp { 0%{opacity:1; transform:translateY(0) scale(.6);} 100%{opacity:0; transform:translateY(-90px) scale(1.4);} }
 
-  .scrollarea { height: 100%; overflow-y: auto; }
+  .scrollarea { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .scrollarea::-webkit-scrollbar { display: none; }
+
+  /* Mobile: khung máy phủ kín màn hình -> chỉ còn 1 lớp cuộn bên trong (hết cảnh cuộn trang + cuộn trong đánh nhau) */
+  @media (max-width: 600px) {
+    body { padding: 0; }
+    .stage { padding: 0; gap: 0; min-height: 100vh; min-height: 100dvh; justify-content: flex-start; }
+    .brandline, .hint { display: none !important; }
+    .phoneWrap { padding: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+    .phoneScreen { width: 100vw !important; height: 100vh !important; height: 100dvh !important; border-radius: 0 !important; }
+  }
 </style>
 
 <div id="root"></div>
@@ -178,8 +187,8 @@ const iosFrameStyles = {
 };
 function IosFrame({ children, width=393, height=852, time='9:41', battery=82, bg='#fff', barColor='#1A1510' }) {
   return (
-    <div style={iosFrameStyles.wrapper}>
-      <div style={{ ...iosFrameStyles.screen, width, height, background:bg }}>
+    <div className="phoneWrap" style={iosFrameStyles.wrapper}>
+      <div className="phoneScreen" style={{ ...iosFrameStyles.screen, width, height, background:bg }}>
         <div style={{ ...iosFrameStyles.statusBar, color:barColor }}>
           <span>{time}</span>
           <div style={iosFrameStyles.statusIcons}>
