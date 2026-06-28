@@ -1,0 +1,701 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fan Gu — Demo game viral</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.23.2/babel.min.js"></script>
+
+<style>
+  :root {
+    --cream: #FFF3E2;
+    --paper: #FFFBF4;
+    --ink: #1A1510;
+    --coral: #FF5247;
+    --lime: #C9F24A;
+    --sun: #FFC94D;
+    --sky: #7FB8FF;
+    --mint: #6FE3C0;
+    --pink: #FFB3C7;
+    --muted: #8A7F70;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  html, body {
+    background:
+      radial-gradient(circle at 18% 12%, rgba(201,242,74,0.45), transparent 38%),
+      radial-gradient(circle at 85% 22%, rgba(255,82,71,0.30), transparent 40%),
+      radial-gradient(circle at 50% 110%, rgba(127,184,255,0.35), transparent 45%),
+      #F5ECDD;
+    font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 40px 16px 56px;
+  }
+  .brandline { text-align: center; }
+  .brandline h1 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 800;
+    font-size: 40px;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .brandline h1 .dot { color: var(--coral); }
+  .brandline p {
+    margin-top: 6px;
+    color: #5C5345;
+    font-weight: 500;
+    font-size: 14px;
+  }
+  .hint {
+    font-size: 12.5px;
+    color: #6B6051;
+    background: rgba(255,255,255,0.6);
+    border: 1.5px solid rgba(26,21,16,0.15);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  /* ---- App primitives ---- */
+  .app { font-family: 'Be Vietnam Pro', sans-serif; height: 100%; }
+  .screen {
+    min-height: 100%;
+    padding: 14px 18px 96px;
+    animation: screenIn .34s cubic-bezier(.2,.8,.25,1);
+  }
+  @keyframes screenIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  .card { background: var(--paper); border: 2.5px solid var(--ink); border-radius: 22px; box-shadow: 4px 4px 0 var(--ink); }
+  .softcard { background: var(--paper); border: 2px solid rgba(26,21,16,0.12); border-radius: 20px; }
+
+  .tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--ink);
+    background: rgba(26,21,16,0.07); padding: 4px 9px; border-radius: 999px;
+  }
+  .pill { display:inline-flex; align-items:center; gap:5px; padding:6px 11px; border-radius:999px; font-weight:700; font-size:12.5px; }
+
+  .btn {
+    width: 100%; border: 2.5px solid var(--ink); border-radius: 16px;
+    background: var(--coral); color: #fff; font-family: 'Baloo 2', sans-serif;
+    font-weight: 700; font-size: 17px; padding: 14px; cursor: pointer;
+    box-shadow: 3px 3px 0 var(--ink); transition: transform .08s, box-shadow .08s;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--ink); }
+  .btn.lime { background: var(--lime); color: var(--ink); }
+  .btn.ghost { background: var(--paper); color: var(--ink); box-shadow: none; }
+
+  .qopt {
+    display:flex; align-items:center; gap:13px; width:100%; text-align:left;
+    background: var(--paper); border: 2.5px solid var(--ink); border-radius: 18px;
+    padding: 15px 16px; cursor:pointer; box-shadow: 3px 3px 0 var(--ink);
+    transition: transform .1s, box-shadow .1s, background .15s;
+    font-family: inherit;
+  }
+  .qopt:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--ink); }
+  .qopt .badge {
+    flex:0 0 auto; width:38px; height:38px; border-radius:11px; border:2px solid var(--ink);
+    display:flex; align-items:center; justify-content:center; font-family:'Baloo 2'; font-weight:800; font-size:19px;
+  }
+
+  .barTrack { height: 30px; border-radius: 9px; background: rgba(26,21,16,0.08); overflow: hidden; border:2px solid var(--ink); }
+  .barFill { height: 100%; border-radius: 6px 0 0 6px; transition: width 1s cubic-bezier(.2,.8,.25,1); display:flex; align-items:center; }
+
+  /* match card */
+  .matchwrap { position: relative; height: 430px; }
+  .matchcard {
+    position:absolute; inset:0; border:2.5px solid var(--ink); border-radius:26px; overflow:hidden;
+    box-shadow: 5px 6px 0 var(--ink); background: var(--paper);
+    display:flex; flex-direction:column; animation: pop .32s cubic-bezier(.2,.9,.3,1.2);
+  }
+  @keyframes pop { from { opacity:0; transform: scale(.94) translateY(8px);} to { opacity:1; transform:none; } }
+  .matchphoto { flex: 1; position: relative; display:flex; align-items:center; justify-content:center; }
+  .actionbtn {
+    width:58px; height:58px; border-radius:50%; border:2.5px solid var(--ink); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:24px; background:var(--paper);
+    box-shadow: 3px 3px 0 var(--ink); transition: transform .08s, box-shadow .08s;
+  }
+  .actionbtn:active { transform: translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+
+  /* tab bar */
+  .tabbar {
+    position:absolute; left:10px; right:10px; bottom:14px; height:64px;
+    background: var(--ink); border-radius: 22px; display:flex; align-items:center; justify-content:space-around;
+    box-shadow: 0 8px 24px rgba(26,21,16,0.35); z-index: 40;
+  }
+  .tabitem { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; color:#9C9388; font-size:10.5px; font-weight:700; padding:6px 10px; position:relative; }
+  .tabitem.active { color: var(--lime); }
+  .tabitem .ti { font-size: 21px; line-height:1; }
+  .tabbadge { position:absolute; top:-2px; right:2px; background:var(--coral); color:#fff; font-size:9px; min-width:16px; height:16px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 3px; border:1.5px solid var(--ink); }
+
+  /* toast */
+  .toast {
+    position:absolute; left:50%; bottom:92px; transform:translateX(-50%);
+    background: var(--ink); color:#fff; padding:11px 18px; border-radius:999px; font-weight:700; font-size:13px;
+    z-index:60; animation: toastIn .3s cubic-bezier(.2,.9,.3,1.2); white-space:nowrap; box-shadow: 0 6px 20px rgba(0,0,0,.3);
+  }
+  @keyframes toastIn { from { opacity:0; transform:translate(-50%,12px);} to { opacity:1; transform:translate(-50%,0);} }
+
+  .heartburst { position:absolute; font-size:34px; animation: floatUp 1s ease-out forwards; pointer-events:none; z-index:70; }
+  @keyframes floatUp { 0%{opacity:1; transform:translateY(0) scale(.6);} 100%{opacity:0; transform:translateY(-90px) scale(1.4);} }
+
+  .scrollarea { height: 100%; overflow-y: auto; }
+  .scrollarea::-webkit-scrollbar { display: none; }
+</style>
+
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+/* ============================ iPhone Frame ============================ */
+const iosFrameStyles = {
+  wrapper: { display:'inline-block', padding:12, background:'#000', borderRadius:60, boxShadow:'0 0 0 2px #1f2937, 0 28px 70px rgba(0,0,0,0.35)', position:'relative' },
+  screen: { position:'relative', borderRadius:48, overflow:'hidden' },
+  statusBar: { position:'absolute', top:0, left:0, right:0, height:54, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 32px', fontSize:16, fontWeight:600, fontFamily:'-apple-system, "SF Pro Text", sans-serif', zIndex:20, pointerEvents:'none' },
+  dynamicIsland: { position:'absolute', top:12, left:'50%', transform:'translateX(-50%)', width:124, height:36, background:'#000', borderRadius:999, zIndex:30 },
+  statusIcons: { display:'flex', alignItems:'center', gap:6 },
+  signalIcon: { display:'flex', alignItems:'flex-end', gap:2, height:12 },
+  signalBar: { width:3, background:'currentColor', borderRadius:1 },
+  batteryIcon: { width:26, height:12, border:'1.5px solid currentColor', borderRadius:3, padding:1, position:'relative', opacity:0.85 },
+  batteryCap: { position:'absolute', top:3, right:-3, width:2, height:6, background:'currentColor', borderRadius:'0 1px 1px 0' },
+  content: { position:'absolute', top:0, left:0, right:0, bottom:0 },
+  homeIndicator: { position:'absolute', bottom:8, left:'50%', transform:'translateX(-50%)', width:130, height:5, background:'rgba(0,0,0,0.28)', borderRadius:999, zIndex:50 },
+};
+function IosFrame({ children, width=393, height=852, time='9:41', battery=82, bg='#fff', barColor='#1A1510' }) {
+  return (
+    <div style={iosFrameStyles.wrapper}>
+      <div style={{ ...iosFrameStyles.screen, width, height, background:bg }}>
+        <div style={{ ...iosFrameStyles.statusBar, color:barColor }}>
+          <span>{time}</span>
+          <div style={iosFrameStyles.statusIcons}>
+            <div style={iosFrameStyles.signalIcon}>
+              <div style={{ ...iosFrameStyles.signalBar, height:4 }} />
+              <div style={{ ...iosFrameStyles.signalBar, height:6 }} />
+              <div style={{ ...iosFrameStyles.signalBar, height:9 }} />
+              <div style={{ ...iosFrameStyles.signalBar, height:11 }} />
+            </div>
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="none" style={{ color:barColor }}>
+              <path d="M8 11.5a1 1 0 100-2 1 1 0 000 2z" fill="currentColor" />
+              <path d="M3 7.5a7 7 0 0110 0" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinecap="round" />
+              <path d="M1 4.5a11 11 0 0114 0" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinecap="round" opacity="0.7" />
+            </svg>
+            <div style={iosFrameStyles.batteryIcon}>
+              <div style={{ width:`${battery}%`, height:'100%', background:'currentColor', borderRadius:1, opacity:0.9 }} />
+              <div style={iosFrameStyles.batteryCap} />
+            </div>
+          </div>
+        </div>
+        <div style={iosFrameStyles.content}>{children}</div>
+        <div style={iosFrameStyles.homeIndicator} />
+      </div>
+    </div>
+  );
+}
+
+/* ============================ Data ============================ */
+/* QUESTIONS[0] = câu hôm nay (bánh mì). [1..4] = 4 câu mới, chơi được qua mục "Chơi thêm". */
+const QUESTIONS = [
+  {
+    topic: 'Bánh mì', date: '28/06', emoji: '🥖',
+    q: 'Phần nào của ổ bánh mì ngon nhất?',
+    options: [
+      { id:'A', label:'Miếng đầu tiên', sub:'còn nóng giòn rụm', emoji:'🥖', color:'var(--sun)', pct:33 },
+      { id:'B', label:'Miếng nhiều pate nhất', sub:'béo bùi đã đời', emoji:'🧈', color:'var(--coral)', pct:31 },
+      { id:'C', label:'Miếng của đứa khác cầm', sub:'lúc nào cũng ngon hơn', emoji:'👀', color:'var(--mint)', pct:36 },
+    ],
+    verdicts: {
+      A: { line:'Team tận hưởng hiện tại 🥖', sub:'Giòn nóng là chân ái — bạn sống cho khoảnh khắc ngay lúc này.' },
+      B: { line:'Team béo bùi là number one 🧈', sub:'Pate nhiều mới đã. Bạn là người biết hưởng thụ.' },
+      C: { line:'Team “của người ta ngon hơn” 👀', sub:'Chân lý muôn đời: đồ trên tay đứa khác lúc nào cũng hấp dẫn hơn.' },
+    },
+  },
+  {
+    topic: 'Trà sữa', date: 'Mới', emoji: '🧋',
+    q: 'Gọi trà sữa kiểu nào mới là đúng bài?',
+    options: [
+      { id:'A', label:'Size M cho healthy', sub:'uống ít cho lành', emoji:'🧘', color:'var(--mint)', pct:22 },
+      { id:'B', label:'Size L vì tính ra rẻ hơn', sub:'kinh tế học đỉnh cao', emoji:'📈', color:'var(--sky)', pct:38 },
+      { id:'C', label:'Gọi của đứa bạn', sub:'hết tiền rồi mà', emoji:'🫰', color:'var(--sun)', pct:40 },
+    ],
+    verdicts: {
+      A: { line:'Team healthy giả trân 🧘', sub:'Gọi size M xong vẫn xin trân châu của bạn cho đỡ thèm.' },
+      B: { line:'Team kinh tế học 📈', sub:'Tính ra rẻ hơn trên mỗi ml là bạn chốt liền. Rất logic!' },
+      C: { line:'Team “ké là chính” 🫰', sub:'Ví rỗng nhưng tình bạn thì đầy. Hết mình vì hội!' },
+    },
+  },
+  {
+    topic: 'Deadline', date: 'Mới', emoji: '⏰',
+    q: 'Deadline tới nơi mà bạn vẫn bình tĩnh, vì?',
+    options: [
+      { id:'A', label:'Đã làm xong từ lâu', sub:'người mẫu mực', emoji:'✅', color:'var(--mint)', pct:28 },
+      { id:'B', label:'Tin vào mình lúc 3h sáng', sub:'chiến thần nước rút', emoji:'🔥', color:'var(--coral)', pct:41 },
+      { id:'C', label:'Đã chấp nhận số phận', sub:'deadline là gì?', emoji:'😌', color:'var(--sun)', pct:31 },
+    ],
+    verdicts: {
+      A: { line:'Team an cư lạc nghiệp ✅', sub:'Xong sớm ngủ ngon — đẳng cấp khó ai bì kịp.' },
+      B: { line:'Team last-minute chiến thần 🔥', sub:'Chỉ bung sức khi hết đường lùi, mà lần nào cũng kịp thần kỳ.' },
+      C: { line:'Team thiền định 😌', sub:'Bình tĩnh tới mức đáng báo động. An nhiên là sức mạnh.' },
+    },
+  },
+  {
+    topic: 'Tình yêu', date: 'Mới', emoji: '💕',
+    q: 'Người yêu nhắn tin lúc mấy giờ là yêu thật lòng?',
+    options: [
+      { id:'A', label:'6h sáng: dậy chưa em?', sub:'báo thức sống', emoji:'🌅', color:'var(--pink)', pct:24 },
+      { id:'B', label:'Giờ nào cũng nhắn', sub:'làm cũng lén nhắn', emoji:'📱', color:'var(--coral)', pct:45 },
+      { id:'C', label:'12h đêm: anh nhớ em', sub:'cú đêm tình cảm', emoji:'🌙', color:'var(--sky)', pct:31 },
+    ],
+    verdicts: {
+      A: { line:'Team báo thức biết yêu 🌅', sub:'Quan tâm bạn từ lúc còn chưa mở mắt. Healthy phết!' },
+      B: { line:'Team nghiện nhắn tin 📱', sub:'Yêu là online 24/7, không rời mắt khỏi bạn một giây.' },
+      C: { line:'Team thính đêm khuya 🌙', sub:'12h đêm còn nhớ bạn — lãng mạn hay mất ngủ thì chưa rõ.' },
+    },
+  },
+  {
+    topic: 'Người yêu cũ', date: 'Mới', emoji: '💣',
+    q: 'Tin nhắn nào của người yêu cũ là nguy hiểm nhất?',
+    options: [
+      { id:'A', label:'“Dạo này sao rồi?”', sub:'thăm dò nhẹ nhàng', emoji:'👀', color:'var(--sun)', pct:27 },
+      { id:'B', label:'“Tự nhiên nhớ hồi xưa”', sub:'khơi lại kỷ niệm', emoji:'🥹', color:'var(--pink)', pct:30 },
+      { id:'C', label:'“Tui say quá à”', sub:'mượn rượu tỏ tình', emoji:'🍺', color:'var(--coral)', pct:43 },
+    ],
+    verdicts: {
+      A: { line:'Cảnh báo cấp 1 👀', sub:'Câu mở màn kinh điển. Nhẹ nhàng mà khiến tim đập lại.' },
+      B: { line:'Cảnh báo cấp 2 🥹', sub:'Bắt đầu đánh thẳng vào kỷ niệm rồi đấy. Cẩn thận!' },
+      C: { line:'Cảnh báo cấp 3 — đỏ 🍺', sub:'Nguy hiểm nhất hệ. “Say” chỉ là cái cớ để được nhắn thôi.' },
+    },
+  },
+];
+
+const MATCHES = [
+  { name:'Bảo Hân', age:22, dist:'Cách 2 km', emoji:'🧋', color:'var(--sun)', tags:['cà phê muối','chữa lành','indie'], bio:'Cuối tuần đi cafe ngắm mưa. Ai cùng gu ới một tiếng 🙋‍♀️' },
+  { name:'Minh Khang', age:24, dist:'Đang online', emoji:'🎧', color:'var(--sky)', tags:['gym','cà khịa','rap việt'], bio:'Đi gym, mê rap, và rep tin nhắn nhanh nhất quả đất.' },
+  { name:'Su Béo', age:21, dist:'Cách 5 km', emoji:'🐱', color:'var(--pink)', tags:['mèo','trà sữa 70%','BTS'], bio:'Sen của 2 bé mèo. Rảnh là nhắn tin lầy lội nguyên ngày.' },
+  { name:'Trí', age:23, dist:'Cách 800 m', emoji:'🛵', color:'var(--mint)', tags:['phượt','cơm tấm','lo-fi'], bio:'Đi phượt khắp VN, hợp gu là kết bạn liền nha.' },
+  { name:'Mây', age:20, dist:'Cách 3 km', emoji:'☁️', color:'var(--lime)', tags:['vẽ','thú cưng','vpop'], bio:'Hơi hướng nội nhưng nhắn tin là lầy lội lắm nha.' },
+];
+const LB = [
+  { rank:1, name:'tuesday_baby', pts:9840, emoji:'👑', color:'var(--sun)' },
+  { rank:2, name:'mlemmlem', pts:9120, emoji:'🥈', color:'var(--sky)' },
+  { rank:3, name:'cay_xe_24h', pts:8755, emoji:'🥉', color:'var(--coral)' },
+  { rank:4, name:'beo_map', pts:7430, emoji:'🔥', color:'var(--mint)' },
+  { rank:5, name:'lofi_girl', pts:7100, emoji:'🎧', color:'var(--pink)' },
+  { rank:6, name:'an_banh_mi', pts:6890, emoji:'🥖', color:'var(--lime)' },
+];
+const KOLS = [
+  { name:'Chị Phiến', sub:'1.2M người theo dõi', emoji:'🎬', color:'var(--coral)' },
+  { name:'Long Chun', sub:'Reaction là nghề', emoji:'😂', color:'var(--sky)' },
+  { name:'Lê Bống', sub:'Trend nào cũng có', emoji:'✨', color:'var(--sun)' },
+];
+
+/* ============================ Small UI ============================ */
+function Avatar({ emoji, color, letter, size=44, ring=true }) {
+  return (
+    <div style={{ width:size, height:size, borderRadius:'30%', background:color, border: ring?'2.5px solid var(--ink)':'none',
+      display:'flex', alignItems:'center', justifyContent:'center', fontSize:size*0.5, flex:'0 0 auto', fontFamily:'Baloo 2', fontWeight:800 }}>
+      {emoji || letter}
+    </div>
+  );
+}
+function Header({ title, onBack, right }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14, marginTop:46 }}>
+      {onBack && (
+        <button onClick={onBack} style={{ width:38, height:38, borderRadius:12, border:'2.5px solid var(--ink)', background:'var(--paper)', cursor:'pointer', fontSize:18, boxShadow:'2px 2px 0 var(--ink)' }}>←</button>
+      )}
+      <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:22, flex:1 }}>{title}</div>
+      {right}
+    </div>
+  );
+}
+
+/* ============================ Screens ============================ */
+function HomeScreen({ go, goQuestion, points, rank }) {
+  const today = QUESTIONS[0];
+  const more = QUESTIONS.slice(1);
+  return (
+    <div className="screen scrollarea">
+      <div style={{ display:'flex', alignItems:'center', gap:11, marginTop:46, marginBottom:16 }}>
+        <Avatar letter="T" color="var(--lime)" size={46} />
+        <div style={{ flex:1 }}>
+          <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:19, lineHeight:1 }}>Chào Tri 👋</div>
+          <div style={{ color:'var(--muted)', fontSize:13, fontWeight:500, marginTop:3 }}>Sẵn sàng cà khịa chưa?</div>
+        </div>
+        <div className="pill" style={{ background:'var(--ink)', color:'var(--lime)' }}>🔥 5 ngày</div>
+      </div>
+
+      <div style={{ display:'flex', gap:10, marginBottom:16 }}>
+        <div className="softcard" style={{ flex:1, padding:'11px 13px' }}>
+          <div style={{ fontSize:11.5, color:'var(--muted)', fontWeight:600 }}>Hạng của bạn</div>
+          <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:21 }}>#{rank}</div>
+        </div>
+        <div className="softcard" style={{ flex:1, padding:'11px 13px' }}>
+          <div style={{ fontSize:11.5, color:'var(--muted)', fontWeight:600 }}>Điểm</div>
+          <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:21 }}>{points.toLocaleString('vi-VN')}</div>
+        </div>
+      </div>
+
+      {/* Hero question */}
+      <div className="card" style={{ background:'var(--coral)', padding:18, marginBottom:14, color:'#fff' }}>
+        <span className="tag" style={{ background:'rgba(255,255,255,0.25)', color:'#fff' }}>Câu hỏi hôm nay · {today.date}</span>
+        <div style={{ fontSize:42, marginTop:8 }}>{today.emoji}</div>
+        <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:24, lineHeight:1.12, marginTop:4 }}>{today.q}</div>
+        <button className="btn lime" style={{ marginTop:16 }} onClick={()=>goQuestion(0)}>Trả lời ngay →</button>
+        <div style={{ marginTop:11, fontSize:12.5, fontWeight:600, opacity:.92, textAlign:'center' }}>🔥 12.847 người đã chơi hôm nay</div>
+      </div>
+
+      {/* Prize teaser */}
+      <div className="card" style={{ background:'var(--lime)', padding:15, marginBottom:18, cursor:'pointer' }} onClick={()=>go('leaderboard')}>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <div style={{ fontSize:30 }}>🎤</div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:15.5, lineHeight:1.15 }}>Leo top nhận vé concert HIEUTHUHAI</div>
+            <div style={{ fontSize:12, color:'#46401f', fontWeight:600, marginTop:2 }}>Show “Mắt Nhắm Mắt Mở” · trả lời mỗi ngày để leo hạng</div>
+          </div>
+          <div style={{ fontSize:20 }}>→</div>
+        </div>
+      </div>
+
+      {/* More questions — playable */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:9, marginLeft:2 }}>
+        <div style={{ fontFamily:'Baloo 2', fontWeight:700, fontSize:14, color:'var(--muted)' }}>CHƠI THÊM 🔥</div>
+        <div style={{ fontSize:11.5, color:'var(--muted)', fontWeight:600 }}>{more.length} câu mới</div>
+      </div>
+      {more.map((qq, i)=>(
+        <button key={i} onClick={()=>goQuestion(i+1)} className="softcard"
+          style={{ width:'100%', textAlign:'left', cursor:'pointer', fontFamily:'inherit', padding:'12px 14px', marginBottom:9, display:'flex', alignItems:'center', gap:12, background:'var(--paper)' }}>
+          <Avatar emoji={qq.emoji} color={qq.options[0].color} size={42} />
+          <div style={{ flex:1 }}>
+            <span className="tag" style={{ background:'rgba(26,21,16,0.08)', marginBottom:4 }}>{qq.topic}</span>
+            <div style={{ fontSize:13.5, fontWeight:600, lineHeight:1.25, marginTop:4 }}>{qq.q}</div>
+          </div>
+          <div style={{ fontSize:18, color:'var(--muted)' }}>›</div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function QuestionScreen({ go, onAnswer, q }) {
+  return (
+    <div className="screen">
+      <Header title="Câu hỏi" onBack={()=>go('home')} right={<div className="pill" style={{ background:'var(--lime)' }}>{q.topic}</div>} />
+      <div className="card" style={{ padding:18, marginBottom:18, textAlign:'center' }}>
+        <div style={{ fontSize:46 }}>{q.emoji}</div>
+        <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:24, lineHeight:1.14, marginTop:6 }}>{q.q}</div>
+        <div style={{ fontSize:12.5, color:'var(--muted)', fontWeight:600, marginTop:8 }}>Chọn 1 đáp án — không có đúng sai, chỉ có cùng gu 😎</div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:13 }}>
+        {q.options.map(o=>(
+          <button key={o.id} className="qopt" onClick={()=>onAnswer(o.id)}>
+            <div className="badge" style={{ background:o.color }}>{o.id}</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontFamily:'Baloo 2', fontWeight:700, fontSize:17 }}>{o.label}</div>
+              <div style={{ fontSize:12.5, color:'var(--muted)', fontWeight:500 }}>{o.sub}</div>
+            </div>
+            <div style={{ fontSize:24 }}>{o.emoji}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ResultScreen({ go, answer, q }) {
+  const [fill, setFill] = useState(false);
+  useEffect(()=>{ const t=setTimeout(()=>setFill(true), 200); return ()=>clearTimeout(t); }, []);
+  const chosen = q.options.find(o=>o.id===answer);
+  const v = q.verdicts[answer];
+  const sameCount = Math.max(3, Math.round(chosen.pct / 4));
+  return (
+    <div className="screen scrollarea">
+      <Header title="Kết quả" onBack={()=>go('home')} />
+      <div className="card" style={{ background:'var(--ink)', color:'#fff', padding:18, marginBottom:16, textAlign:'center' }}>
+        <div style={{ fontSize:13, fontWeight:600, opacity:.7 }}>Bạn đã chọn</div>
+        <div style={{ fontSize:40, marginTop:4 }}>{chosen.emoji}</div>
+        <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:22, marginTop:2 }}>{chosen.label}</div>
+        <div style={{ marginTop:12, fontFamily:'Baloo 2', fontWeight:700, fontSize:18, color:'var(--lime)' }}>{v.line}</div>
+        <div style={{ fontSize:13, opacity:.85, marginTop:5, lineHeight:1.4 }}>{v.sub}</div>
+      </div>
+
+      <div style={{ fontFamily:'Baloo 2', fontWeight:700, fontSize:14, color:'var(--muted)', marginBottom:10, marginLeft:2 }}>CẢ NƯỚC CHỌN GÌ?</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:11, marginBottom:18 }}>
+        {q.options.map(o=>(
+          <div key={o.id}>
+            <div style={{ display:'flex', justifyContent:'space-between', fontSize:13.5, fontWeight:700, marginBottom:4 }}>
+              <span>{o.emoji} {o.label} {o.id===answer && <span style={{ color:'var(--coral)' }}>· bạn</span>}</span>
+              <span>{o.pct}%</span>
+            </div>
+            <div className="barTrack">
+              <div className="barFill" style={{ width: fill ? o.pct+'%' : '0%', background:o.color }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="card" style={{ background:'var(--sky)', padding:15, marginBottom:13, display:'flex', alignItems:'center', gap:12 }}>
+        <div style={{ fontSize:30 }}>💘</div>
+        <div style={{ flex:1, fontWeight:600, fontSize:13.5, lineHeight:1.3 }}>
+          <b style={{ fontFamily:'Baloo 2' }}>{sameCount} người</b> cùng gu “{chosen.emoji} {chosen.label}” ở gần bạn
+        </div>
+      </div>
+      <button className="btn" onClick={()=>go('match')}>Xem ai cùng gu với bạn 💛</button>
+      <button className="btn ghost" style={{ marginTop:10 }} onClick={()=>go('share')}>Chia sẻ kết quả</button>
+    </div>
+  );
+}
+
+function MatchScreen({ go, toast, addFriend, friends, q, answer }) {
+  const [idx, setIdx] = useState(0);
+  const [bursts, setBursts] = useState([]);
+  const chosen = q.options.find(o=>o.id===answer) || q.options[0];
+  const u = MATCHES[idx];
+
+  function burst() {
+    const id = Date.now() + Math.round(performance.now());
+    setBursts(b=>[...b, id]);
+    setTimeout(()=>setBursts(b=>b.filter(x=>x!==id)), 1000);
+  }
+  function act(type) {
+    if (type==='tim') { burst(); toast('💛 Đã gửi tim cho ' + u.name); }
+    if (type==='hi') { toast('👋 Đã say hi với ' + u.name); }
+    if (type==='ket') { addFriend(u.name); toast('🎉 Đã kết bạn với ' + u.name); }
+    setTimeout(()=>setIdx(i=>i+1), type==='skip'?0:520);
+  }
+
+  return (
+    <div className="screen">
+      <Header title="Cùng gu với bạn" onBack={()=>go('result')}
+        right={<div className="pill" style={{ background:'var(--lime)' }}>💛 {friends}</div>} />
+      <div style={{ textAlign:'center', marginBottom:12, fontSize:13, color:'var(--muted)', fontWeight:600 }}>
+        Cùng chọn {chosen.emoji} <b style={{ color:'var(--ink)' }}>{chosen.label}</b>
+      </div>
+
+      {u ? (
+        <div>
+          <div className="matchwrap">
+            <div className="matchcard" key={idx}>
+              <div className="matchphoto" style={{ background:`linear-gradient(150deg, ${u.color}, var(--cream))` }}>
+                <div style={{ fontSize:96 }}>{u.emoji}</div>
+                <div className="pill" style={{ position:'absolute', top:12, left:12, background:'var(--ink)', color:'var(--lime)' }}>{chosen.emoji} cùng gu</div>
+                {bursts.map(b=>(<div key={b} className="heartburst" style={{ bottom:30, left:'46%' }}>💛</div>))}
+              </div>
+              <div style={{ padding:'14px 16px 16px' }}>
+                <div style={{ display:'flex', alignItems:'baseline', gap:8 }}>
+                  <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:22 }}>{u.name}, {u.age}</div>
+                  <div style={{ fontSize:12, color:'var(--muted)', fontWeight:600 }}>· {u.dist}</div>
+                </div>
+                <div style={{ display:'flex', gap:6, flexWrap:'wrap', margin:'9px 0' }}>
+                  {u.tags.map(t=>(<span key={t} className="tag" style={{ textTransform:'none', background:'rgba(26,21,16,0.08)' }}>#{t}</span>))}
+                </div>
+                <div style={{ fontSize:13, fontWeight:500, color:'#5C5345', lineHeight:1.35 }}>“{u.bio}”</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:16, marginTop:18 }}>
+            <button className="actionbtn" onClick={()=>act('skip')} title="Bỏ qua">✕</button>
+            <button className="actionbtn" style={{ background:'var(--pink)' }} onClick={()=>act('tim')} title="Gửi tim">💛</button>
+            <button className="actionbtn" style={{ background:'var(--sky)' }} onClick={()=>act('hi')} title="Say hi">👋</button>
+            <button className="actionbtn" style={{ background:'var(--lime)' }} onClick={()=>act('ket')} title="Kết bạn">➕</button>
+          </div>
+          <div style={{ textAlign:'center', marginTop:12, fontSize:12, color:'var(--muted)', fontWeight:600 }}>Còn {MATCHES.length - idx - 1} người cùng gu nữa</div>
+        </div>
+      ) : (
+        <div className="card" style={{ padding:26, textAlign:'center', marginTop:30 }}>
+          <div style={{ fontSize:50 }}>🥳</div>
+          <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:20, marginTop:8 }}>Hết người cùng gu rồi!</div>
+          <div style={{ fontSize:13.5, color:'var(--muted)', fontWeight:500, marginTop:6, lineHeight:1.4 }}>Trả lời câu hỏi mai để gặp thêm người mới nhé 💫</div>
+          <button className="btn lime" style={{ marginTop:18 }} onClick={()=>go('leaderboard')}>Xem bảng xếp hạng 🏆</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LeaderboardScreen({ go, rank, points }) {
+  return (
+    <div className="screen scrollarea">
+      <Header title="Bảng xếp hạng" onBack={()=>go('home')} />
+      {/* Prize banner */}
+      <div className="card" style={{ background:'var(--ink)', color:'#fff', padding:18, marginBottom:16, position:'relative', overflow:'hidden' }}>
+        <span className="tag" style={{ background:'var(--coral)', color:'#fff' }}>Giải tháng 6 🎁</span>
+        <div style={{ display:'flex', alignItems:'center', gap:13, marginTop:12 }}>
+          <div style={{ fontSize:42 }}>🎤</div>
+          <div>
+            <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:20, lineHeight:1.1 }}>Vé concert HIEUTHUHAI</div>
+            <div style={{ fontSize:13, color:'var(--lime)', fontWeight:700, marginTop:3 }}>Show “Mắt Nhắm Mắt Mở”</div>
+            <div style={{ fontSize:12, opacity:.7, marginTop:2 }}>Top 10 mỗi tuần · cặp vé VIP</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Your rank */}
+      <div className="card" style={{ background:'var(--lime)', padding:'13px 16px', marginBottom:16, display:'flex', alignItems:'center', gap:12 }}>
+        <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:24 }}>#{rank}</div>
+        <div style={{ flex:1 }}>
+          <div style={{ fontWeight:700, fontSize:14 }}>Hạng của bạn</div>
+          <div style={{ fontSize:12, color:'#46401f', fontWeight:600 }}>Còn 2.140đ nữa là vào top 10 tuần này 🚀</div>
+        </div>
+        <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:16 }}>{points.toLocaleString('vi-VN')}đ</div>
+      </div>
+
+      <div style={{ fontFamily:'Baloo 2', fontWeight:700, fontSize:14, color:'var(--muted)', marginBottom:10, marginLeft:2 }}>TOP TUẦN NÀY</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+        {LB.map(p=>(
+          <div key={p.rank} className="softcard" style={{ padding:'10px 13px', display:'flex', alignItems:'center', gap:12, borderColor: p.rank<=3?'var(--ink)':'rgba(26,21,16,0.12)', borderWidth: p.rank<=3?2.5:2, boxShadow: p.rank<=3?'3px 3px 0 var(--ink)':'none' }}>
+            <div style={{ width:26, fontFamily:'Baloo 2', fontWeight:800, fontSize:16, textAlign:'center' }}>{p.rank}</div>
+            <Avatar emoji={p.emoji} color={p.color} size={40} />
+            <div style={{ flex:1, fontWeight:700, fontSize:14 }}>@{p.name}</div>
+            <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:14, color:'var(--muted)' }}>{p.pts.toLocaleString('vi-VN')}</div>
+          </div>
+        ))}
+        <div className="softcard" style={{ padding:'10px 13px', display:'flex', alignItems:'center', gap:12, background:'var(--cream)', borderStyle:'dashed' }}>
+          <div style={{ width:26, fontFamily:'Baloo 2', fontWeight:800, fontSize:15, textAlign:'center' }}>{rank}</div>
+          <Avatar letter="T" color="var(--coral)" size={40} />
+          <div style={{ flex:1, fontWeight:700, fontSize:14 }}>@ban (bạn)</div>
+          <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:14, color:'var(--muted)' }}>{points.toLocaleString('vi-VN')}</div>
+        </div>
+      </div>
+      <button className="btn" style={{ marginTop:18 }} onClick={()=>go('home')}>Trả lời thêm +50đ ⚡</button>
+    </div>
+  );
+}
+
+function ShareScreen({ go, toast }) {
+  return (
+    <div className="screen scrollarea">
+      <Header title="Chia sẻ & Thách đấu" onBack={()=>go('home')} />
+
+      {/* Share card preview */}
+      <div style={{ fontFamily:'Baloo 2', fontWeight:700, fontSize:14, color:'var(--muted)', marginBottom:10, marginLeft:2 }}>THẺ CHIA SẺ CỦA BẠN</div>
+      <div className="card" style={{ background:'linear-gradient(160deg, var(--coral), var(--sun))', padding:18, color:'#fff', marginBottom:14 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:18 }}>Fan Gu<span style={{ color:'var(--ink)' }}>.</span></div>
+          <span className="tag" style={{ background:'rgba(0,0,0,0.25)', color:'#fff' }}>#fangu</span>
+        </div>
+        <div style={{ fontSize:13, fontWeight:600, opacity:.92, marginTop:14 }}>Tri chọn phần ngon nhất của ổ bánh mì là...</div>
+        <div style={{ fontFamily:'Baloo 2', fontWeight:800, fontSize:28, marginTop:2 }}>👀 Miếng của đứa khác</div>
+        <div style={{ background:'rgba(255,255,255,0.22)', borderRadius:12, padding:'9px 12px', marginTop:14, fontSize:13, fontWeight:600 }}>
+          Còn bạn? Vào Fan Gu trả lời thử xem mình cùng gu với ai 👀
+        </div>
+      </div>
+      <div style={{ display:'flex', gap:10, marginBottom:22 }}>
+        <button className="btn" style={{ background:'var(--ink)' }} onClick={()=>toast('Đang mở TikTok…')}>TikTok</button>
+        <button className="btn lime" onClick={()=>toast('Đã lưu vào Story 📸')}>Story</button>
+        <button className="btn ghost" onClick={()=>toast('🔗 Đã sao chép link')}>Link</button>
+      </div>
+
+      {/* KOL challenge */}
+      <div style={{ fontFamily:'Baloo 2', fontWeight:700, fontSize:14, color:'var(--muted)', marginBottom:4, marginLeft:2 }}>THÁCH ĐẤU KOL 🎬</div>
+      <div style={{ fontSize:12.5, color:'var(--muted)', fontWeight:500, marginBottom:11, marginLeft:2, lineHeight:1.35 }}>Gửi thử thách để KOL quay clip chơi Fan Gu — kéo bạn bè vào chung vui.</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+        {KOLS.map(k=>(
+          <div key={k.name} className="softcard" style={{ padding:'11px 13px', display:'flex', alignItems:'center', gap:12 }}>
+            <Avatar emoji={k.emoji} color={k.color} size={44} />
+            <div style={{ flex:1 }}>
+              <div style={{ fontWeight:700, fontSize:14.5 }}>{k.name}</div>
+              <div style={{ fontSize:12, color:'var(--muted)', fontWeight:500 }}>{k.sub}</div>
+            </div>
+            <button onClick={()=>toast('🎬 Đã gửi thử thách tới ' + k.name)}
+              style={{ border:'2.5px solid var(--ink)', background:'var(--lime)', borderRadius:12, padding:'8px 13px', fontWeight:700, fontSize:13, cursor:'pointer', boxShadow:'2px 2px 0 var(--ink)', fontFamily:'inherit' }}>
+              Gửi
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================ Tab bar ============================ */
+function TabBar({ screen, go, friends }) {
+  const tabs = [
+    { id:'home', icon:'🥖', label:'Câu hỏi' },
+    { id:'leaderboard', icon:'🏆', label:'BXH' },
+    { id:'match', icon:'💛', label:'Kết bạn', badge:friends },
+    { id:'share', icon:'📤', label:'Chia sẻ' },
+  ];
+  const map = { home:'home', question:'home', result:'home', match:'match', leaderboard:'leaderboard', share:'share' };
+  return (
+    <div className="tabbar">
+      {tabs.map(t=>(
+        <div key={t.id} className={'tabitem' + (map[screen]===t.id ? ' active':'')} onClick={()=>go(t.id)}>
+          <span className="ti">{t.icon}</span>
+          <span>{t.label}</span>
+          {t.badge>0 && <span className="tabbadge">{t.badge}</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ============================ App ============================ */
+function AppPhone() {
+  const [screen, setScreen] = useState('home');
+  const [qIndex, setQIndex] = useState(0);
+  const [answer, setAnswer] = useState('B');
+  const [friendNames, setFriendNames] = useState([]);
+  const [points, setPoints] = useState(1240);
+  const [toastMsg, setToastMsg] = useState(null);
+  const toastTimer = useRef(null);
+
+  function go(s) { setScreen(s); }
+  function goQuestion(i) { setQIndex(i); setScreen('question'); }
+  function toast(msg) {
+    setToastMsg(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(()=>setToastMsg(null), 1800);
+  }
+  function onAnswer(id) { setAnswer(id); setPoints(p=>p+50); go('result'); }
+  function addFriend(name) { setFriendNames(prev => prev.includes(name) ? prev : [...prev, name]); }
+
+  const friends = friendNames.length;
+  const activeQ = QUESTIONS[qIndex];
+
+  return (
+    <div className="app">
+      {screen==='home' && <HomeScreen go={go} goQuestion={goQuestion} points={points} rank={47} />}
+      {screen==='question' && <QuestionScreen go={go} onAnswer={onAnswer} q={activeQ} />}
+      {screen==='result' && <ResultScreen go={go} answer={answer} q={activeQ} />}
+      {screen==='match' && <MatchScreen go={go} toast={toast} addFriend={addFriend} friends={friends} q={activeQ} answer={answer} />}
+      {screen==='leaderboard' && <LeaderboardScreen go={go} rank={47} points={points} />}
+      {screen==='share' && <ShareScreen go={go} toast={toast} />}
+      {toastMsg && <div className="toast">{toastMsg}</div>}
+      <TabBar screen={screen} go={go} friends={friends} />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div className="stage">
+      <div className="brandline">
+        <h1>Fan Gu<span className="dot">.</span></h1>
+        <p>Trả lời câu dí dỏm · Tìm người cùng gu · Leo top nhận vé concert</p>
+      </div>
+      <IosFrame bg="var(--cream)">
+        <AppPhone />
+      </IosFrame>
+      <div className="hint">👆 Bấm “Trả lời ngay” hoặc cuộn xuống mục “Chơi thêm” để thử 4 câu mới</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
